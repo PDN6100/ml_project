@@ -1,4 +1,4 @@
-﻿pipeline {
+pipeline{
     agent any
 
     environment {
@@ -56,7 +56,7 @@
             }
         }
 
-        stage('DÃ©ployer sur Kubernetes') {
+        stage('Deployer sur Kubernetes') {
             steps {
                 script {
                     if (isUnix()) {
