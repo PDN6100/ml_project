@@ -1,10 +1,12 @@
-﻿pipeline {
+pipeline {
     agent any
 
     environment {
-        REGISTRY = "docker.io/pdn6100"   // change si besoin
+        REGISTRY = "docker.io/pdn6100"   
         BACKEND_IMAGE = "ml_project_backend"
         FRONTEND_IMAGE = "ml_project_frontend"
+        DOCKER_USER = credentials('docker-username')   // crée un credential dans Jenkins
+        DOCKER_PASS = credentials('docker-password')   // idem
     }
 
     stages {
@@ -18,9 +20,9 @@
             steps {
                 script {
                     if (isUnix()) {
-                        sh 'docker build -t / ./backend'
+                        sh "docker build -t ${REGISTRY}/${BACKEND_IMAGE}:latest ./backend"
                     } else {
-                        bat 'docker build -t %REGISTRY%/%BACKEND_IMAGE%:latest ./backend'
+                        bat "docker build -t %REGISTRY%/%BACKEND_IMAGE%:latest ./backend"
                     }
                 }
             }
@@ -30,25 +32,25 @@
             steps {
                 script {
                     if (isUnix()) {
-                        sh 'docker build -t / ./frontend'
+                        sh "docker build -t ${REGISTRY}/${FRONTEND_IMAGE}:latest ./frontend"
                     } else {
-                        bat 'docker build -t %REGISTRY%/%FRONTEND_IMAGE%:latest ./frontend'
+                        bat "docker build -t %REGISTRY%/%FRONTEND_IMAGE%:latest ./frontend"
                     }
                 }
             }
         }
 
-        stage('Push Images') {
+        stage('Push Images Docker') {
             steps {
                 script {
                     if (isUnix()) {
-                        sh 'echo  | docker login -u  --password-stdin'
-                        sh 'docker push /'
-                        sh 'docker push /'
+                        sh "echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin"
+                        sh "docker push ${REGISTRY}/${BACKEND_IMAGE}:latest"
+                        sh "docker push ${REGISTRY}/${FRONTEND_IMAGE}:latest"
                     } else {
-                        bat 'docker login -u %DOCKER_USER% -p %DOCKER_PASS%'
-                        bat 'docker push %REGISTRY%/%BACKEND_IMAGE%:latest'
-                        bat 'docker push %REGISTRY%/%FRONTEND_IMAGE%:latest'
+                        bat "docker login -u %DOCKER_USER% -p %DOCKER_PASS%"
+                        bat "docker push %REGISTRY%/%BACKEND_IMAGE%:latest"
+                        bat "docker push %REGISTRY%/%FRONTEND_IMAGE%:latest"
                     }
                 }
             }
@@ -58,9 +60,9 @@
             steps {
                 script {
                     if (isUnix()) {
-                        sh 'kubectl apply -f k8s/'
+                        sh "kubectl apply -f k8s/"
                     } else {
-                        bat 'kubectl apply -f k8s/'
+                        bat "kubectl apply -f k8s/"
                     }
                 }
             }
