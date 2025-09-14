@@ -60,10 +60,9 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        sh 'kubectl apply -f k8s/'
+                        sh 'export PATH=$PATH:/tmp && kubectl apply -f k8s/'
                     } else {
-                        // Windows + Docker Desktop
-                        bat 'kubectl apply -f C:\\Users\\PDN_SN\\Downloads\\ml_project\\k8s\\'
+                        bat "\"C:\\Users\\PDN_SN\\kubectl.exe\" apply -f C:\\Users\\PDN_SN\\Downloads\\ml_project\\k8s\\"
                     }
                 }
             }
