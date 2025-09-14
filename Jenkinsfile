@@ -6,10 +6,6 @@ pipeline {
         }
     }
 
-    tools {
-        git 'Default'  // Utilisation de l'installation Git configurée dans Jenkins
-    }
-
     environment {
         REGISTRY = "docker.io/pdn6100"
         BACKEND_IMAGE = "ml_project_backend"
@@ -19,9 +15,15 @@ pipeline {
     stages {
         stage('Cloner le repo') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/PDN6100/ml_project.git',
-                    toolName: 'Default'  // spécifie explicitement l'outil Git
+                script {
+                    // Utilisation du Git configuré dans Jenkins
+                    env.GIT_HOME = tool 'Default'
+                    sh """
+                        echo 'Clonage du dépôt...'
+                        rm -rf * .git || true
+                        ${env.GIT_HOME}/bin/git clone -b main https://github.com/pdn6100/ml_project.git .
+                    """
+                }
             }
         }
 
