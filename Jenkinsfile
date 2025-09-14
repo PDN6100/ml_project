@@ -1,11 +1,10 @@
-pipeline{
+pipeline {
     agent any
 
     environment {
         REGISTRY = "docker.io/pdn6100"
         BACKEND_IMAGE = "ml_project_backend"
         FRONTEND_IMAGE = "ml_project_frontend"
-        KUBECTL_PATH = "C:\\Users\\PDN_SN\\kubectl.exe"
     }
 
     stages {
@@ -21,7 +20,7 @@ pipeline{
                     if (isUnix()) {
                         sh "docker build -t $REGISTRY/$BACKEND_IMAGE:latest ./backend"
                     } else {
-                        bat "docker build -t %REGISTRY%/%BACKEND_IMAGE%:latest ./backend"
+                        bat "docker build -t %REGISTRY%/%BACKEND_IMAGE%:latest .\\backend"
                     }
                 }
             }
@@ -33,7 +32,7 @@ pipeline{
                     if (isUnix()) {
                         sh "docker build -t $REGISTRY/$FRONTEND_IMAGE:latest ./frontend"
                     } else {
-                        bat "docker build -t %REGISTRY%/%FRONTEND_IMAGE%:latest ./frontend"
+                        bat "docker build -t %REGISTRY%/%FRONTEND_IMAGE%:latest .\\frontend"
                     }
                 }
             }
@@ -63,7 +62,8 @@ pipeline{
                     if (isUnix()) {
                         sh 'kubectl apply -f k8s/'
                     } else {
-                        bat "\"%KUBECTL_PATH%\" apply -f C:\\Users\\PDN_SN\\Downloads\\ml_project\\k8s\\"
+                        // Windows + Docker Desktop
+                        bat 'kubectl apply -f C:\\Users\\PDN_SN\\Downloads\\ml_project\\k8s\\'
                     }
                 }
             }
