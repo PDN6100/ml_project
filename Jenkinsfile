@@ -60,9 +60,14 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        sh 'export PATH=$PATH:/tmp && kubectl apply -f k8s/'
+                        sh '''
+                        curl -LO "https://dl.k8s.io/release/v1.32.2/bin/linux/amd64/kubectl"
+                        chmod +x kubectl
+                        export PATH=$PWD:$PATH
+                        kubectl apply -f k8s/
+                        '''
                     } else {
-                        bat "\"C:\\Users\\PDN_SN\\kubectl.exe\" apply -f C:\\Users\\PDN_SN\\Downloads\\ml_project\\k8s\\"
+                        bat "\"%KUBECTL_PATH%\" apply -f C:\\Users\\PDN_SN\\Downloads\\ml_project\\k8s\\"
                     }
                 }
             }
