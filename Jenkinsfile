@@ -5,6 +5,7 @@ pipeline{
         REGISTRY = "docker.io/pdn6100"
         BACKEND_IMAGE = "ml_project_backend"
         FRONTEND_IMAGE = "ml_project_frontend"
+        KUBECTL_PATH = "C:\\Users\\PDN_SN\\kubectl.exe"
     }
 
     stages {
@@ -62,11 +63,10 @@ pipeline{
                     if (isUnix()) {
                         sh 'kubectl apply -f k8s/'
                     } else {
-                        bat 'kubectl apply -f k8s/'
+                        bat "\"%KUBECTL_PATH%\" apply -f C:\\Users\\PDN_SN\\Downloads\\ml_project\\k8s\\"
                     }
                 }
             }
         }
     }
 }
-
