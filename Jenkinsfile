@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'pdn6100/jenkins-kubectl:latest'
+            args '-u root:root'  // pour avoir les permissions si besoin
+        }
+    }
 
     environment {
         REGISTRY = "docker.io/pdn6100"
@@ -17,11 +22,7 @@ pipeline {
         stage('Construire Backend') {
             steps {
                 script {
-                    if (isUnix()) {
-                        sh "docker build -t $REGISTRY/$BACKEND_IMAGE:latest ./backend"
-                    } else {
-                        bat "docker build -t %REGISTRY%/%BACKEND_IMAGE%:latest .\\backend"
-                    }
+                    sh "docker build -t $REGISTRY/$BACKEND_IMAGE:latest ./backend"
                 }
             }
         }
@@ -29,11 +30,7 @@ pipeline {
         stage('Construire Frontend') {
             steps {
                 script {
-                    if (isUnix()) {
-                        sh "docker build -t $REGISTRY/$FRONTEND_IMAGE:latest ./frontend"
-                    } else {
-                        bat "docker build -t %REGISTRY%/%FRONTEND_IMAGE%:latest .\\frontend"
-                    }
+                    sh "docker build -t $REGISTRY/$FRONTEND_IMAGE:latest ./frontend"
                 }
             }
         }
@@ -42,15 +39,9 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-username', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        if (isUnix()) {
-                            sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                            sh "docker push $REGISTRY/$BACKEND_IMAGE:latest"
-                            sh "docker push $REGISTRY/$FRONTEND_IMAGE:latest"
-                        } else {
-                            bat "docker login -u %DOCKER_USER% -p %DOCKER_PASS%"
-                            bat "docker push %REGISTRY%/%BACKEND_IMAGE%:latest"
-                            bat "docker push %REGISTRY%/%FRONTEND_IMAGE%:latest"
-                        }
+                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                        sh "docker push $REGISTRY/$BACKEND_IMAGE:latest"
+                        sh "docker push $REGISTRY/$FRONTEND_IMAGE:latest"
                     }
                 }
             }
@@ -59,16 +50,7 @@ pipeline {
         stage('Deployer sur Kubernetes') {
             steps {
                 script {
-                    if (isUnix()) {
-                        sh '''
-                        curl -LO "https://dl.k8s.io/release/v1.32.2/bin/linux/amd64/kubectl"
-                        chmod +x kubectl
-                        export PATH=$PWD:$PATH
-                        kubectl apply -f k8s/
-                        '''
-                    } else {
-                        bat "\"%KUBECTL_PATH%\" apply -f C:\\Users\\PDN_SN\\Downloads\\ml_project\\k8s\\"
-                    }
+                    sh "kubectl apply -f k8s/"
                 }
             }
         }
