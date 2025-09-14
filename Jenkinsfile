@@ -7,7 +7,7 @@ pipeline {
     }
 
     tools {
-        git 'Default'  // Utilisation de l'installation Git que tu as configurée
+        git 'Default'  // Utilisation de l'installation Git configurée dans Jenkins
     }
 
     environment {
@@ -19,7 +19,9 @@ pipeline {
     stages {
         stage('Cloner le repo') {
             steps {
-                git branch: 'main', url: 'https://github.com/PDN6100/ml_project.git'
+                git branch: 'main',
+                    url: 'https://github.com/PDN6100/ml_project.git',
+                    toolName: 'Default'  // spécifie explicitement l'outil Git
             }
         }
 
