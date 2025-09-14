@@ -1,9 +1,13 @@
 pipeline {
     agent {
         docker {
-            image 'pdn6100/jenkins-kubectl:latest'
-            args '-u root:root'  // pour avoir les permissions si besoin
+            image 'myjenkins:latest'   // ton image Jenkins custom
+            args '-u root:root -v /var/run/docker.sock:/var/run/docker.sock'
         }
+    }
+
+    tools {
+        git 'Default'  // Utilisation de l'installation Git que tu as configurée
     }
 
     environment {
@@ -22,7 +26,11 @@ pipeline {
         stage('Construire Backend') {
             steps {
                 script {
-                    sh "docker build -t $REGISTRY/$BACKEND_IMAGE:latest ./backend"
+                    sh """
+                        echo 'Construction de l’image backend...'
+                        docker build -t $REGISTRY/$BACKEND_IMAGE:latest ./backend
+                        docker images
+                    """
                 }
             }
         }
@@ -30,7 +38,11 @@ pipeline {
         stage('Construire Frontend') {
             steps {
                 script {
-                    sh "docker build -t $REGISTRY/$FRONTEND_IMAGE:latest ./frontend"
+                    sh """
+                        echo 'Construction de l’image frontend...'
+                        docker build -t $REGISTRY/$FRONTEND_IMAGE:latest ./frontend
+                        docker images
+                    """
                 }
             }
         }
@@ -39,20 +51,41 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-username', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                        sh "docker push $REGISTRY/$BACKEND_IMAGE:latest"
-                        sh "docker push $REGISTRY/$FRONTEND_IMAGE:latest"
+                        sh """
+                            echo 'Login Docker...'
+                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                            docker push $REGISTRY/$BACKEND_IMAGE:latest
+                            docker push $REGISTRY/$FRONTEND_IMAGE:latest
+                        """
                     }
                 }
             }
         }
 
-        stage('Deployer sur Kubernetes') {
+        stage('Déployer sur Kubernetes') {
             steps {
                 script {
-                    sh "kubectl apply -f k8s/"
+                    sh """
+                        echo 'Déploiement sur Kubernetes...'
+                        kubectl config view
+                        kubectl get nodes
+                        kubectl apply -f k8s/
+                    """
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline terminée.'
+            sh 'docker logout || true'
+        }
+        success {
+            echo 'Pipeline réussie !'
+        }
+        failure {
+            echo 'Pipeline échouée ! Vérifie les logs.'
         }
     }
 }
